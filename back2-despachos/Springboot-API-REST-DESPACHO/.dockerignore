@@ -1,0 +1,11 @@
+.env
+*.iml
+.idea/
+*.log
+target/
+.settings/
+.git/
+.gitignore
+docker-compose.override.yml
+*.swp
+*~
