@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clonar repositorio
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Mostrar mensaje
-        run: echo "Pipeline funcionando correctamente"
+      - name: Mensaje
+        run: echo "GitHub Actions funcionando"
