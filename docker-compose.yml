@@ -1,0 +1,63 @@
+services:
+
+  mysql:
+    image: mysql:8
+    container_name: mysql-devops
+
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: devops_ventas
+
+    ports:
+      - "3308:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    restart: always
+
+  backend:
+    build:
+      context: ./back1-ventas
+
+    container_name: backend-ventas
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - mysql
+
+    restart: always
+
+  backend-despacho:
+    build:
+      context: ./back2-despacho
+
+    container_name: backend-despacho
+
+    ports:
+      - "8081:8080"
+
+    depends_on:
+      - mysql
+
+    restart: always
+
+  frontend:
+    build:
+      context: ./front-despacho
+
+    container_name: frontend-devops
+
+    ports:
+      - "5173:5173"
+
+    depends_on:
+      - backend
+      - backend-despacho
+
+    restart: always
+
+volumes:
+  mysql_data:
