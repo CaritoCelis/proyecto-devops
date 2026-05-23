@@ -1,0 +1,73 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+
+env:
+  DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+
+jobs:
+
+  build-backend-ventas:
+    name: Build & Push back1-ventas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./back1-ventas
+          push: true
+          tags: |
+            ${{ env.DOCKER_USER }}/back1-ventas:latest
+            ${{ env.DOCKER_USER }}/back1-ventas:v${{ github.run_number }}
+
+  build-backend-despacho:
+    name: Build & Push back2-despacho
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./back2-despacho
+          push: true
+          tags: |
+            ${{ env.DOCKER_USER }}/back2-despacho:latest
+            ${{ env.DOCKER_USER }}/back2-despacho:v${{ github.run_number }}
+
+  build-frontend:
+    name: Build & Push front-despacho
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./front-despacho
+          push: true
+          tags: |
+            ${{ env.DOCKER_USER }}/front-despacho:latest
+            ${{ env.DOCKER_USER }}/front-despacho:v${{ github.run_number }}

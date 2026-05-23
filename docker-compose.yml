@@ -1,63 +1,67 @@
 services:
-
-  mysql:
+  mysql-ventas:
     image: mysql:8
-    container_name: mysql-devops
-
+    container_name: mysql-ventas
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: devops_ventas
-
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB_VENTAS}
     ports:
       - "3308:3306"
-
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_ventas_data:/var/lib/mysql
+    restart: always
 
+  mysql-despacho:
+    image: mysql:8
+    container_name: mysql-despacho
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB_DESPACHO}
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_despacho_data:/var/lib/mysql
     restart: always
 
   backend:
     build:
       context: ./back1-ventas
-
     container_name: backend-ventas
-
     ports:
       - "8080:8080"
-
     depends_on:
-      - mysql
-
+      - mysql-ventas
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-ventas:3306/${MYSQL_DB_VENTAS}
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     restart: always
 
   backend-despacho:
     build:
       context: ./back2-despacho
-
     container_name: backend-despacho
-
     ports:
       - "8081:8080"
-
     depends_on:
-      - mysql
-
+      - mysql-despacho
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-despacho:3306/${MYSQL_DB_DESPACHO}
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     restart: always
 
   frontend:
     build:
       context: ./front-despacho
-
     container_name: frontend-devops
-
     ports:
       - "5173:5173"
-
     depends_on:
       - backend
       - backend-despacho
-
     restart: always
 
 volumes:
-  mysql_data:
+  mysql_ventas_data:
+  mysql_despacho_data:

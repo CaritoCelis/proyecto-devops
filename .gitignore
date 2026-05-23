@@ -1,0 +1,18 @@
+.env
+*.env
+
+**/target/
+**/.mvn/
+**/mvnw
+**/mvnw.cmd
+
+# Node
+**/node_modules/
+**/dist/
+**/.vite/
+
+.idea/
+.vscode/
+*.iml
+
+*.log
