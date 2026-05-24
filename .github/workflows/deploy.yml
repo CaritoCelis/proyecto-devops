@@ -161,19 +161,27 @@ jobs:
             docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_TOKEN
             docker network create backend-b-net || true
 
-            if ! docker ps -q -f name=mysql-despacho | grep -q .; then
-              docker run -d \
-                --name mysql-despacho \
-                --network backend-b-net \
-                --restart unless-stopped \
-                -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
-                -e MYSQL_DATABASE=devops_despacho \
-                mysql:8.0
-              echo "Esperando MySQL..."
-              until docker exec mysql-despacho mysqladmin ping -uroot -p$MYSQL_ROOT_PASSWORD --silent 2>/dev/null; do
-                sleep 3
-              done
-            fi
+            docker stop mysql-despacho || true
+            docker rm mysql-despacho || true
+            docker run -d \
+              --name mysql-despacho \
+              --network backend-b-net \
+              --restart unless-stopped \
+              -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
+              -e MYSQL_DATABASE=devops_despacho \
+              mysql:8.0
+
+            echo "Esperando que MySQL inicie..."
+            RETRIES=0
+            until docker exec mysql-despacho mysqladmin ping -uroot -p$MYSQL_ROOT_PASSWORD --silent 2>/dev/null; do
+              sleep 3
+              RETRIES=$((RETRIES+1))
+              if [ $RETRIES -eq 20 ]; then
+                echo "Timeout alcanzado, continuando..."
+                break
+              fi
+            done
+            echo "MySQL listo"
 
             docker pull $DOCKERHUB_USERNAME/back2-despacho:latest
             docker stop backend-despacho || true
