@@ -109,9 +109,9 @@ jobs:
               --name backend-ventas \
               --restart unless-stopped \
               -p 8080:8080 \
-              -e SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/devops_ventas?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true \
               -e DB_USERNAME=root \
               -e DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
+              -e "SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/devops_ventas?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true" \
               ${{ secrets.DOCKERHUB_USERNAME }}/back1-ventas:latest
 
   deploy-backend-b:
@@ -136,7 +136,7 @@ jobs:
               --name backend-despacho \
               --restart unless-stopped \
               -p 8081:8080 \
-              -e SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/devops_despacho?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true \
               -e DB_USERNAME=root \
               -e DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
+              -e "SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/devops_despacho?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true" \
               ${{ secrets.DOCKERHUB_USERNAME }}/back2-despacho:latest
