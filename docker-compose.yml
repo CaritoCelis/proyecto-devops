@@ -10,6 +10,11 @@ services:
     volumes:
       - mysql_ventas_data:/var/lib/mysql
     restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mysql-despacho:
     image: mysql:8
@@ -22,6 +27,11 @@ services:
     volumes:
       - mysql_despacho_data:/var/lib/mysql
     restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -30,11 +40,12 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - mysql-ventas
+      mysql-ventas:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-ventas:3306/${MYSQL_DB_VENTAS}
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-ventas:3306/${MYSQL_DB_VENTAS}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      DB_USERNAME: ${MYSQL_USERNAME}
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     restart: always
 
   backend-despacho:
@@ -44,11 +55,12 @@ services:
     ports:
       - "8081:8080"
     depends_on:
-      - mysql-despacho
+      mysql-despacho:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-despacho:3306/${MYSQL_DB_DESPACHO}
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-despacho:3306/${MYSQL_DB_DESPACHO}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      DB_USERNAME: ${MYSQL_USERNAME}
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     restart: always
 
   frontend:
