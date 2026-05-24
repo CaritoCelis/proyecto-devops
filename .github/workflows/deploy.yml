@@ -77,15 +77,20 @@ jobs:
           host: ${{ secrets.EC2_FRONTEND_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
           script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:latest
+            docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_TOKEN
+            docker pull $DOCKERHUB_USERNAME/front-despacho:latest
             docker stop frontend-devops || true
             docker rm frontend-devops || true
             docker run -d \
               --name frontend-devops \
               --restart unless-stopped \
               -p 5173:5173 \
-              ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:latest
+              $DOCKERHUB_USERNAME/front-despacho:latest
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
   deploy-backend-a:
     name: Deploy Backend A a EC2
@@ -101,23 +106,26 @@ jobs:
           proxy_host: ${{ secrets.EC2_FRONTEND_HOST }}
           proxy_username: ec2-user
           proxy_key: ${{ secrets.EC2_SSH_KEY }}
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,MYSQL_ROOT_PASSWORD
           script: |
+            docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_TOKEN
             docker network create backend-a-net || true
 
-            docker stop mysql-ventas || true
-            docker rm mysql-ventas || true
-            docker run -d \
-              --name mysql-ventas \
-              --network backend-a-net \
-              --restart unless-stopped \
-              -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
-              -e MYSQL_DATABASE=devops_ventas \
-              mysql:8.0
+            if ! docker ps -q -f name=mysql-ventas | grep -q .; then
+              docker run -d \
+                --name mysql-ventas \
+                --network backend-a-net \
+                --restart unless-stopped \
+                -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
+                -e MYSQL_DATABASE=devops_ventas \
+                mysql:8.0
+              echo "Esperando MySQL..."
+              until docker exec mysql-ventas mysqladmin ping -uroot -p$MYSQL_ROOT_PASSWORD --silent 2>/dev/null; do
+                sleep 3
+              done
+            fi
 
-            echo "Esperando que MySQL inicie..."
-            sleep 30
-
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/back1-ventas:latest
+            docker pull $DOCKERHUB_USERNAME/back1-ventas:latest
             docker stop backend-ventas || true
             docker rm backend-ventas || true
             docker run -d \
@@ -126,9 +134,13 @@ jobs:
               --restart unless-stopped \
               -p 8080:8080 \
               -e DB_USERNAME=root \
-              -e DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
+              -e DB_PASSWORD=$MYSQL_ROOT_PASSWORD \
               -e "SPRING_DATASOURCE_URL=jdbc:mysql://mysql-ventas:3306/devops_ventas?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true" \
-              ${{ secrets.DOCKERHUB_USERNAME }}/back1-ventas:latest
+              $DOCKERHUB_USERNAME/back1-ventas:latest
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
 
   deploy-backend-b:
     name: Deploy Backend B a EC2
@@ -144,23 +156,26 @@ jobs:
           proxy_host: ${{ secrets.EC2_FRONTEND_HOST }}
           proxy_username: ec2-user
           proxy_key: ${{ secrets.EC2_SSH_KEY }}
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,MYSQL_ROOT_PASSWORD
           script: |
+            docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_TOKEN
             docker network create backend-b-net || true
 
-            docker stop mysql-despacho || true
-            docker rm mysql-despacho || true
-            docker run -d \
-              --name mysql-despacho \
-              --network backend-b-net \
-              --restart unless-stopped \
-              -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
-              -e MYSQL_DATABASE=devops_despacho \
-              mysql:8.0
+            if ! docker ps -q -f name=mysql-despacho | grep -q .; then
+              docker run -d \
+                --name mysql-despacho \
+                --network backend-b-net \
+                --restart unless-stopped \
+                -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
+                -e MYSQL_DATABASE=devops_despacho \
+                mysql:8.0
+              echo "Esperando MySQL..."
+              until docker exec mysql-despacho mysqladmin ping -uroot -p$MYSQL_ROOT_PASSWORD --silent 2>/dev/null; do
+                sleep 3
+              done
+            fi
 
-            echo "Esperando que MySQL inicie..."
-            sleep 30
-
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/back2-despacho:latest
+            docker pull $DOCKERHUB_USERNAME/back2-despacho:latest
             docker stop backend-despacho || true
             docker rm backend-despacho || true
             docker run -d \
@@ -169,6 +184,10 @@ jobs:
               --restart unless-stopped \
               -p 8081:8080 \
               -e DB_USERNAME=root \
-              -e DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
+              -e DB_PASSWORD=$MYSQL_ROOT_PASSWORD \
               -e "SPRING_DATASOURCE_URL=jdbc:mysql://mysql-despacho:3306/devops_despacho?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true" \
-              ${{ secrets.DOCKERHUB_USERNAME }}/back2-despacho:latest
+              $DOCKERHUB_USERNAME/back2-despacho:latest
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
