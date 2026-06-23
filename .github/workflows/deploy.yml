@@ -68,7 +68,7 @@ jobs:
         run: |
           aws ecs update-service \
             --cluster cluster-devops \
-            --service svc-back2-despacho \
+            --service svc-back1-despacho \
             --force-new-deployment \
             --region ${{ env.AWS_REGION }}
 
