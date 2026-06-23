@@ -1,4 +1,4 @@
-FROM node:20
+FROM node:20 AS build
 
 WORKDIR /app
 
@@ -8,12 +8,12 @@ RUN npm install
 
 COPY . .
 
-RUN addgroup --system appgroup && adduser --system appuser --ingroup appgroup
+RUN npm run build
 
-RUN chown -R appuser:appgroup /app
+FROM nginx:alpine
 
-USER appuser
+COPY --from=build /app/dist /usr/share/nginx/html
 
-EXPOSE 5173
+EXPOSE 80
 
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD ["nginx", "-g", "daemon off;"]
