@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: back1-ventas
+  labels:
+    app: back1-ventas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: back1-ventas
+  template:
+    metadata:
+      labels:
+        app: back1-ventas
+    spec:
+      containers:
+        - name: back1-ventas
+          image: AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/back1-ventas:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_USERNAME
+              value: "root"
+            - name: DB_PASSWORD
+              value: "rootpassword"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://mysql-ventas:3306/devops_ventas?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: back1-ventas
+spec:
+  selector:
+    app: back1-ventas
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+# Base de datos MySQL para ventas
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-ventas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-ventas
+  template:
+    metadata:
+      labels:
+        app: mysql-ventas
+    spec:
+      containers:
+        - name: mysql-ventas
+          image: mysql:8
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "rootpassword"
+            - name: MYSQL_DATABASE
+              value: "devops_ventas"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-ventas
+spec:
+  selector:
+    app: mysql-ventas
+  ports:
+    - port: 3306
+      targetPort: 3306
+  type: ClusterIP
